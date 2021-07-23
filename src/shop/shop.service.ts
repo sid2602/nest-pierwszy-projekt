@@ -1,6 +1,9 @@
+import { ShopItem } from './shop-item.entity';
 import BasketProductDto from 'src/interfaces/basketProduct.dto';
 import { Injectable } from '@nestjs/common';
 import { ShopProduct } from '../interfaces/shopProduct';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 const products = [
   {
@@ -22,29 +25,49 @@ const products = [
 
 @Injectable()
 export class ShopService {
-  private readonly shopProducts: ShopProduct[] = products;
+  constructor(
+    @InjectRepository(ShopItem)
+    private shopItemRepository: Repository<ShopItem>,
+  ) {}
 
-  getProducts(): ShopProduct[] {
-    return this.shopProducts;
+  async getProducts(): Promise<ShopProduct[]> {
+    return await this.shopItemRepository.find();
   }
 
-  getProductIndex(productName: string): number {
-    return this.shopProducts.findIndex(
+  async getProduct(id: string): Promise<ShopProduct> {
+    return await this.shopItemRepository.findOneOrFail(id);
+  }
+
+  async hasProduct(productName: string): Promise<boolean> {
+    return (await this.getProducts()).some(
       (product) => product.name === productName,
     );
   }
 
-  getProductPrice(product: BasketProductDto): number {
-    const index = this.getProductIndex(product.name);
-
-    if (index === -1) {
+  async getProductPrice(product: BasketProductDto): Promise<number> {
+    if (!(await this.hasProduct(product.name))) {
       return 0;
     }
 
-    return (
-      Math.round(
-        this.shopProducts[index].taxedPrice * 1.23 * product.quantity * 100,
-      ) / 100
-    );
+    const price = (await this.getProducts()).find(
+      (item) => item.name === product.name,
+    ).taxedPrice;
+
+    return Math.round(price * 1.23 * product.quantity * 100) / 100;
+  }
+
+  async deleteProduct(id: string) {
+    await this.shopItemRepository.delete(id);
+  }
+
+  async addProduct(product: ShopProduct): Promise<ShopProduct> {
+    const newItem = new ShopItem();
+    newItem.name = product.name;
+    newItem.description = product.description;
+    newItem.taxedPrice = product.taxedPrice;
+
+    await this.shopItemRepository.save(newItem);
+
+    return newItem;
   }
 }

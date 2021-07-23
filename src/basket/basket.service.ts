@@ -13,7 +13,7 @@ export class BasketService {
 
   constructor(@Inject(ShopService) private readonly shopService: ShopService) {}
 
-  addProductToBasket(product: BasketProductDto): Message {
+  async addProductToBasket(product: BasketProductDto): Promise<Message> {
     const { name, quantity } = product;
 
     if (typeof name !== 'string' || typeof quantity !== 'number') {
@@ -22,7 +22,7 @@ export class BasketService {
       };
     }
 
-    if (this.shopService.getProductIndex(name) === -1)
+    if (!(await this.shopService.hasProduct(name)))
       return {
         isSuccess: false,
       };
@@ -35,7 +35,7 @@ export class BasketService {
     };
   }
 
-  deleteProductFromBasket(id: number): Message {
+  async deleteProductFromBasket(id: number): Promise<Message> {
     if (this.basket[id]) {
       this.basket.splice(id, 1);
       return {
@@ -52,12 +52,15 @@ export class BasketService {
     return this.basket;
   }
 
-  getTotalPrice(): number {
-    const prices = this.basket.map((basketItem) =>
-      this.shopService.getProductPrice(basketItem),
+  async getTotalPrice(): Promise<number> {
+    const prices = await Promise.all(
+      this.basket.map(
+        async (basketItem) =>
+          await this.shopService.getProductPrice(basketItem),
+      ),
     );
 
-    const totalPrice = prices.reduce((prev, curr) => (prev += curr), 0);
+    const totalPrice = await prices.reduce((prev, curr) => (prev += curr), 0);
 
     return Math.round(totalPrice * 100) / 100;
   }
