@@ -14,7 +14,7 @@ export class BasketService {
   constructor(@Inject(ShopService) private readonly shopService: ShopService) {}
 
   async addProductToBasket(product: BasketProductDto): Promise<Message> {
-    const { name, quantity } = product;
+    const { name, quantity, id } = product;
 
     if (typeof name !== 'string' || typeof quantity !== 'number') {
       return {
@@ -28,6 +28,8 @@ export class BasketService {
       };
 
     const index = this.basket.push(product) - 1;
+
+    this.shopService.addBoughtCounter(id);
 
     return {
       isSuccess: true,

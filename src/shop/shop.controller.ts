@@ -7,16 +7,28 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { ShopProduct } from '../interfaces/shopProduct';
+import {
+  GetPaginatedListOfProductsResponse,
+  ShopProduct,
+} from '../interfaces/shopProduct';
 import { ShopService } from './shop.service';
 
 @Controller('shop')
 export class ShopController {
   constructor(@Inject(ShopService) private shopService: ShopService) {}
 
-  @Get()
-  async getProducts(): Promise<ShopProduct[]> {
-    return this.shopService.getProducts();
+  @Get('/find/:searchTerm')
+  async testFindItem(
+    @Param('searchTerm') searchTerm: string,
+  ): Promise<ShopProduct[]> {
+    return this.shopService.findProducts(searchTerm);
+  }
+
+  @Get('/:pageNumber')
+  async getProducts(
+    @Param('pageNumber') pageNumber: string,
+  ): Promise<GetPaginatedListOfProductsResponse> {
+    return this.shopService.getProducts(Number(pageNumber));
   }
 
   @Get('/:id')

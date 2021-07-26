@@ -4,3 +4,8 @@ export class ShopProduct {
   description: string;
   taxedPrice: number;
 }
+
+export interface GetPaginatedListOfProductsResponse {
+  items: ShopProduct[];
+  pages: number;
+}

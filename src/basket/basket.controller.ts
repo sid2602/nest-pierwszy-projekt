@@ -1,6 +1,6 @@
 import { BasketService } from './basket.service';
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import BasketProductDto from 'src/interfaces/basketProduct.dto';
+import BasketProductDto from '../interfaces/basketProduct.dto';
 import { Message } from './basket.service';
 @Controller('basket')
 export class BasketController {
